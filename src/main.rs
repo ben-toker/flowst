@@ -1,40 +1,33 @@
-use clap::{Parser,Subcommand};
+use flowst::{Args, init_vars, parse_args, set_time, Action, TimeArgs};
 
-#[derive(Parser, Debug)]
-#[clap(
-    name = "flowst",
-    author = "Ben Toker <btoker.dev>",
-    version = "1.0",
-    about = "Basic Pomodoro (Flow) timer in Rust.",
-    long_about = None,
-)]
+const FLOWST: &str = r#"
+                                                              
+                                                              
+          ,--,                                        ___     
+  .--., ,--.'|                                      ,--.'|_   
+,--.'  \|  | :     ,---.           .---.            |  | :,'  
+|  | /\/:  : '    '   ,'\         /. ./|  .--.--.   :  : ' :  
+:  : :  |  ' |   /   /   |     .-'-. ' | /  /    '.;__,'  /   
+:  | |-,'  | |  .   ; ,. :    /___/ \: ||  :  /`./|  |   |    
+|  : :/||  | :  '   | |: : .-'.. '   ' .|  :  ;_  :__,'| :    
+|  |  .''  : |__'   | .; :/___/ \:     ' \  \    `. '  : |__  
+'  : '  |  | '.'|   :    |.   \  ' .\     `----.   \|  | '.'| 
+|  | |  ;  :    ;\   \  /  \   \   ' \ | /  /`--'  /;  :    ; 
+|  : \  |  ,   /  `----'    \   \  |--" '--'.     / |  ,   /  
+|  |,'   ---`-'              \   \ |      `--'---'   ---`-'   
+`--'                          '---"                           
+                                                              
+"#;
 
-struct Args {
-    ///Command here; set, add, or reset
-    command: String,
-    ///work time frame
-    work: u32,
-    ///rest time frame
-    rest: u32,
-}
-
-#[derive(Subcommand)]
-enum Action {
-    #[command(name = "set")]
-    Set,
-    #[command(name = "add")]
-    Add,
-    #[command(name = "reset")]
-    Reset
-}
 fn main() {
-    let args = Args::parse();
+ println!("{}", FLOWST);  
+    let args = parse_args();
+        
+    match args.command {
+        Action::Set(arg) => set_time(&arg),
+        Action::Add(_arg) => println!("add to be implemented"),
+        Action::Reset => println!("0"),
+    }
 
-    let command = match &args.command[..] {
-        "set" => Ok(Action::Set),
-        "add" => Ok(Action::Add),
-        "reset" => Ok(Action::Reset),
-        _ => Err("No command given.")
-    };
 }
 
