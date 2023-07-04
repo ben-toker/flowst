@@ -33,6 +33,7 @@ pub struct Args {
 #[derive(Parser, Debug)]
 pub enum Action {
     Set(TimeArgs),
+    Start(TimeArgs),
     Add(TimeArgs),
     Reset,
 }
