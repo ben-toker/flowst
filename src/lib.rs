@@ -6,7 +6,23 @@ use std::env;
     name = "flowst",
     author = "Ben Toker <btoker.dev>",
     version = "1.0",
-    about = "Basic Pomodoro (Flow) timer in Rust.",
+    about = r#"                                                            
+                                                              
+          ,--,                                        ___     
+  .--., ,--.'|                                      ,--.'|_   
+,--.'  \|  | :     ,---.           .---.            |  | :,'  
+|  | /\/:  : '    '   ,'\         /. ./|  .--.--.   :  : ' :  
+:  : :  |  ' |   /   /   |     .-'-. ' | /  /    '.;__,'  /   
+:  | |-,'  | |  .   ; ,. :    /___/ \: ||  :  /`./|  |   |    
+|  : :/||  | :  '   | |: : .-'.. '   ' .|  :  ;_  :__,'| :    
+|  |  .''  : |__'   | .; :/___/ \:     ' \  \    `. '  : |__  
+'  : '  |  | '.'|   :    |.   \  ' .\     `----.   \|  | '.'| 
+|  | |  ;  :    ;\   \  /  \   \   ' \ | /  /`--'  /;  :    ; 
+|  : \  |  ,   /  `----'    \   \  |--" '--'.     / |  ,   /  
+|  |,'   ---`-'              \   \ |      `--'---'   ---`-'   
+`--'                          '---"                           
+
+    Basic Pomodoro (Flow) timer in Rust."#,
     long_about = None,
 )]
 pub struct Args {
@@ -43,7 +59,6 @@ pub fn init_vars() {
         Err(_) => env::set_var("rest", "5"),
         _ => {},
     }
-
 }
 
 pub fn set_time(args: &TimeArgs) {
