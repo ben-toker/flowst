@@ -1,7 +1,18 @@
 use tokio::time::{sleep,Duration,Instant, sleep_until};
-use std::env;
+use std::{env,io::{stdout,Write}};
 //use tokio (async) to actually initiate a timer.
 //once timer is up, message is printed.
+
+
+pub async fn countdown(seconds: u64) {
+    let mut stdout = stdout();
+    for i in (1..=seconds).rev() {
+        write!(&mut stdout, "\r{} seconds remaining ", i).unwrap();
+        stdout.flush().unwrap();
+        sleep(Duration::from_secs(1)).await;
+    }
+    println!("Session complete.");
+}
 
 
 pub async fn start_timer() {
@@ -23,13 +34,8 @@ pub async fn start_timer() {
     }
 
     //TODO: change to minutes after testing
-   let workdeadline = Instant::now() + Duration::from_secs(worktime);
-   sleep_until(workdeadline).await;
-   println!("{} seconds have elapsed. Rest: {} seconds and counting", worktime, resttime);
-   let restdeadline = Instant::now() + Duration::from_secs(resttime);
-   sleep_until(restdeadline).await;
-   println!("{} seconds have elapsed. Session is now over.", resttime);
-
-}
+    countdown(worktime).await;
+    countdown(resttime).await;
+  }
 
 
