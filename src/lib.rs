@@ -1,8 +1,6 @@
-use clap::Parser;
-use std::env;
-
+use clap::{Parser,Subcommand};
 #[derive(Parser, Debug)]
-#[clap(
+#[command(
     name = "flowst",
     author = "Ben Toker <btoker.dev>",
     version = "1.0",
@@ -26,45 +24,28 @@ use std::env;
     long_about = None,
 )]
 pub struct Args {
-   #[clap(subcommand)]
-    pub command: Action
+    #[command(subcommand)]
+    pub command: Action,
+}
+
+#[derive(Subcommand, Debug)]
+pub enum Action {
+    ///Starts the timer. Uses -w and -r flags.
+    Start(TimeArgs),
 }
 
 #[derive(Parser, Debug)]
-pub enum Action {
-    Set(TimeArgs),
-    Start(TimeArgs),
-    Add(TimeArgs),
-    Reset,
-}
-
-#[derive(Parser,Debug)]
 pub struct TimeArgs {
-    work: u32,
-
-    rest: u32,
+    /// Work time.
+    #[arg(short, long, default_value = "25")]
+    pub work: u32,
+    /// Rest time.
+    #[arg(short, long, default_value = "5")]
+    pub rest: u32,
 }
 
 pub fn parse_args() -> Args {
     Args::parse()
 }
 
-//checkes if environmental variables are initiated, initiates if not.
-pub fn init_vars() {
-    match env::var("work") {
-        Err(_) => env::set_var("work", "25"),
-        _ => {},
-    }
 
-    match env::var("rest") {
-        Err(_) => env::set_var("rest", "5"),
-        _ => {},
-    }
-}
-
-pub fn set_time(args: &TimeArgs) {
-    env::set_var("work", args.work.to_string());
-    env::set_var("rest", args.rest.to_string());
-    println!("Work is now: {}, Rest is now: {}", args.work, args.rest);
-
-}

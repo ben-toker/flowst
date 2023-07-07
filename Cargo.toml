@@ -8,4 +8,5 @@ edition = "2021"
 [dependencies]
 clap = {version = "4.3.5", features = ["derive"]}
 tokio = { version = "1", features = ["time","macros","rt"] }
-
+confy = {version = "0.3"}
+serde = {version = "1.0.166", features = ["derive"]}
