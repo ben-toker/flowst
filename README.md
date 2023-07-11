@@ -23,6 +23,7 @@ This is designed to be a *really* basic pomodoro CLI tool built w/ **Rust**.
 
 Here are the present **TODOs**:
 - Make something a *bit* more polished.
+    - Build terminal user interface (TUI)
 
 Currently done:
 - The basic application!
@@ -31,10 +32,8 @@ These values are set to the basic pomodoro ratio (25min:5min) but allows for
 custom values to be inputted with -w (-work) or -r (-rest) flags.
 This will start the timer, without being able to pause.
 
-Experimental branch:
-This branch is a lot more complicated, involving further async functionality, 
-potentially multi-threaded operations, etc. etc. I will be making commits to that
-branch and merge it once it is in a somewhat useable state! (it's a complete disaster
-currently).
+Play branch:
+curently testing out new features! (TUI !)
+
 
 Have fun!

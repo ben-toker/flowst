@@ -15,7 +15,6 @@ async fn countdown(seconds: u64) {
           stdout.flush().unwrap();
           sleep(Duration::from_secs(1)).await;
         }
-    println!("\nSession complete.");
 }
 
 pub async fn start_timer(work: u64, rest: u64) {
