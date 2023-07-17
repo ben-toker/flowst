@@ -1,6 +1,7 @@
 use clap::{Parser,Subcommand};
 use crossterm::event::{self,Event, KeyCode};
 use std::io;
+mod ui;
 
 #[allow(unused_imports)]
 use tui::{
@@ -64,9 +65,9 @@ pub fn parse_args() -> Args {
     Args::parse()
 }
 
-pub fn run_app<B: Backend>(terminal: &mut Terminal<B>) -> io::Result<()> {
+pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut receiver: tokio::sync::mpsc::Receiver<String>)-> io::Result<()> {
     loop {
-        terminal.draw(ui)?;
+        terminal.draw(ui::ui)?;
 
         //q for quit 
         if let Event::Key(key) = event::read()? {
@@ -77,24 +78,4 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>) -> io::Result<()> {
     }
 }
 
-fn ui<B: Backend>(f: &mut Frame<B>) {
-   let chunks = Layout::default()
-        .direction(Direction::Vertical)
-        .margin(1)
-        .constraints(
-            [
-                Constraint::Percentage(10),
-                Constraint::Percentage(80),
-                Constraint::Percentage(10)
-            ].as_ref()
-        )
-        .split(f.size());
-    let block = Block::default()
-         .title("Block")
-         .borders(Borders::ALL);
-    f.render_widget(block, chunks[0]);
-    let block = Block::default()
-         .title("Block 2")
-         .borders(Borders::ALL);
-    f.render_widget(block, chunks[1]);
-}
+
