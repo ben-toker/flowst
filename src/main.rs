@@ -16,7 +16,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         Action::Start(arg)=> {
             let mut receiver = timer::start_timer(arg.work.into(), arg.rest.into()).await;
             while let Some(message) = receiver.recv().await {
-               print!("{}", message);
+               println!("{}", message);
             }
             Ok(())
         },
