@@ -14,8 +14,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     match &args.command {
         Action::Start(arg)=> {
-            timer::start_timer(arg.work.into(), arg.rest.into()).await;
-            Ok(())
+        let mut receiver = timer::start_timer(arg.work.into(), arg.rest.into()).await;
+        while let Some(message) = receiver.recv().await {
+           print!("{}", message);
+        }
+        Ok(())
         },
         Action::App => {
             enable_raw_mode()?;
@@ -23,8 +26,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
             execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
             let backend = CrosstermBackend::new(stdout);
             let mut terminal = Terminal::new(backend)?;
-
-            let res = flowst::run_app(&mut terminal);
+            
+            let rec = timer::start_timer(25, 5).await;
+         flowst::run_app(&mut terminal,rec).await?;
             // restore terminal
         disable_raw_mode()?;
         execute!(
@@ -34,9 +38,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
         )?;
         terminal.show_cursor()?;
 
-        if let Err(err) = res {
-            println!("{:?}", err)
-        }
 
         Ok(())
     }

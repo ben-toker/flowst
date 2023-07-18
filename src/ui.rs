@@ -26,22 +26,28 @@ let chunks = Layout::default()
 chunks
 }
 
-pub fn tim_display<B: Backend>(f: &mut Frame<B>, mut receiver: tokio::sync::mpsc::Receiver<String>) -> tui::widgets::Paragraph {
+pub fn tim_display<B: Backend>(f: &mut Frame<B>, tim_msg: &str) {
     let chunks = chunks(f);
     let block = Block::default()
          .title("Timer")
          .borders(Borders::ALL);
     f.render_widget(block, chunks[0]);
 
-    let paragraph = tui::widgets::Paragraph::new("No current timer.");
-    if let Some(countdown_string) = receiver.blocking_recv() {
-        let text = vec![
-            tui::text::Spans::from(tui::text::Span::raw(&countdown_string)),
-        ]; 
+    // Create a new area for the Paragraph that fits inside the Block.
+    let inner_area = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Percentage(100)].as_ref())
+        .margin(1)  // Adjust this value to create a margin inside the Block.
+        .split(chunks[0])[0];
+
+    let text = vec![
+        tui::text::Spans::from(tui::text::Span::raw(tim_msg)),
+    ]; 
     let paragraph = tui::widgets::Paragraph::new(text).wrap(tui::widgets::Wrap { trim: true });
-    }
-    paragraph
+    f.render_widget(paragraph, inner_area);
 }
+
+
 
 pub fn ui<B: Backend>(f: &mut Frame<B>) {
    let chunks = chunks(f);

@@ -65,9 +65,13 @@ pub fn parse_args() -> Args {
     Args::parse()
 }
 
-pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut receiver: tokio::sync::mpsc::Receiver<String>)-> io::Result<()> {
+pub async fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut receiver: tokio::sync::mpsc::Receiver<String>) -> io::Result<()> {
     loop {
-        terminal.draw(ui::ui)?;
+        let timer_message = receiver.recv().await.unwrap_or_else(|| String::from("No current timer."));
+        terminal.draw(|f| {
+            ui::tim_display(f, &timer_message);
+            ui::ui(f);
+        })?;
 
         //q for quit 
         if let Event::Key(key) = event::read()? {
