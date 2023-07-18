@@ -66,6 +66,19 @@ pub fn parse_args() -> Args {
 }
 
 pub async fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut receiver: tokio::sync::mpsc::Receiver<String>) -> io::Result<()> {
+   let (tx, rx) = std::sync::mpsc::channel();
+
+    std::thread::spawn(move || {
+        loop {
+            if let Event::Key(key) = event::read().unwrap() {
+                if let KeyCode::Char('q') = key.code {
+                    tx.send(()).unwrap();
+                    break;
+                }
+            }
+        }
+    });
+
     loop {
         let timer_message = receiver.recv().await.unwrap_or_else(|| String::from("No current timer."));
         terminal.draw(|f| {
@@ -73,13 +86,10 @@ pub async fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut receiver: tokio
             ui::ui(f);
         })?;
 
-        //q for quit 
-        if let Event::Key(key) = event::read()? {
-            if let KeyCode::Char('q') = key.code {
-                return Ok(());
-            }
+        if rx.try_recv().is_ok() {
+            break;
         }
     }
+
+    Ok(())
 }
-
-

@@ -14,11 +14,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     match &args.command {
         Action::Start(arg)=> {
-        let mut receiver = timer::start_timer(arg.work.into(), arg.rest.into()).await;
-        while let Some(message) = receiver.recv().await {
-           print!("{}", message);
-        }
-        Ok(())
+            let mut receiver = timer::start_timer(arg.work.into(), arg.rest.into()).await;
+            while let Some(message) = receiver.recv().await {
+               print!("{}", message);
+            }
+            Ok(())
         },
         Action::App => {
             enable_raw_mode()?;
