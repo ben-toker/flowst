@@ -84,7 +84,8 @@ pub fn ui<B: Backend>(f: &mut Frame<B>) {
 
     let style = Style::default()
         .fg(Color::Cyan)
-        .bg(Color::Black);
+        .bg(Color::Black)
+        .add_modifier(Modifier::BOLD);
 
      let logo = Text::styled(r#"                                                          
                                                               
@@ -110,5 +111,18 @@ pub fn ui<B: Backend>(f: &mut Frame<B>) {
          .title("Controls")
          .borders(Borders::ALL);
     f.render_widget(block, chunks[3]);
+
+    let inner_area = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Percentage(100)].as_ref())
+        .margin(1)  // Adjust this value to create a margin inside the Block.
+        .split(chunks[3])[0];
+
+    let text = vec![
+        Spans::from(Span::styled("q - quit | p - pause/resume",style)),
+    ]; 
+    let paragraph = Paragraph::new(text).wrap(Wrap { trim:  true });
+    f.render_widget(paragraph, inner_area);
+
 }
 
