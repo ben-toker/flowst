@@ -23,8 +23,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
             let timer_info = TimerInfo {
                start_time: SystemTime::now(), 
-               work_duration: Duration::new(work, 0), 
-               rest_duration: Duration::new(rest, 0),
+               work_duration: Duration::from_secs(work),
+               rest_duration: Duration::from_secs(rest),
+               run_state: true
             };
             
             save_timer(&timer_info)?;
@@ -55,12 +56,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
             let rem_work = timer_info.work_duration - timer_info.start_time.elapsed().unwrap();
             let rem_rest = (timer_info.work_duration + timer_info.rest_duration) - timer_info.start_time.elapsed().unwrap();
-
-
-            if timer_info.start_time != SystemTime::now() && (rem_work.as_secs() == 0) && (rem_work.as_secs() == 0) {
-                config::reset_timer()?;
-            }
-
 
             let rec = timer::start_timer(rem_work, rem_rest).await;
 

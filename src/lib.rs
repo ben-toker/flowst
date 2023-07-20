@@ -4,7 +4,6 @@ use std::io;
 mod ui;
 pub mod timer;
 pub mod config;
-use crate::timer::TimerState;
 
 #[allow(unused_imports)]
 use tui::{
@@ -64,11 +63,6 @@ pub struct TimeArgs {
     /// Rest time.
     #[arg(short, long, default_value = "5")]
     pub rest: u32,
-}
-
-pub struct Timer {
-    pub args: TimeArgs,
-    pub state: TimerState,
 }
 
 pub fn parse_args() -> Args {
