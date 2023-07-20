@@ -2,6 +2,9 @@ use clap::{Parser,Subcommand};
 use crossterm::event::{self,Event, KeyCode};
 use std::io;
 mod ui;
+pub mod timer;
+pub mod config;
+use crate::timer::TimerState;
 
 #[allow(unused_imports)]
 use tui::{
@@ -48,7 +51,9 @@ pub struct Args {
 pub enum Action {
     ///Starts the timer. Uses -w and -r flags.
     Start(TimeArgs),
+    Toggle,
     App,
+    Reset,
 }
 
 #[derive(Parser, Debug)]
@@ -61,13 +66,18 @@ pub struct TimeArgs {
     pub rest: u32,
 }
 
+pub struct Timer {
+    pub args: TimeArgs,
+    pub state: TimerState,
+}
+
 pub fn parse_args() -> Args {
     Args::parse()
 }
 
 pub async fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut receiver: tokio::sync::mpsc::Receiver<String>) -> io::Result<()> {
    let (tx, rx) = std::sync::mpsc::channel();
-
+    
     std::thread::spawn(move || {
         loop {
             if let Event::Key(key) = event::read().unwrap() {
@@ -80,12 +90,12 @@ pub async fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut receiver: tokio
     });
 
     loop {
-        let timer_message = receiver.recv().await.unwrap_or_else(|| String::from("No current timer."));
+        let timer_message = receiver.recv().await.unwrap_or_else(|| String::from("Please enter timer."));
         terminal.draw(|f| {
             ui::tim_display(f, &timer_message);
             ui::ui(f);
         })?;
-
+    
         if rx.try_recv().is_ok() {
             break;
         }
@@ -93,3 +103,5 @@ pub async fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut receiver: tokio
 
     Ok(())
 }
+
+
