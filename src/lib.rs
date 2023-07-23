@@ -69,6 +69,9 @@ pub fn parse_args() -> Args {
     Args::parse()
 }
 
+
+
+
 pub async fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut receiver: tokio::sync::mpsc::Receiver<String>) -> io::Result<()> {
    let (tx, rx) = std::sync::mpsc::channel();
     
@@ -97,5 +100,4 @@ pub async fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut receiver: tokio
 
     Ok(())
 }
-
 
