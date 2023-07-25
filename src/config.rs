@@ -3,7 +3,7 @@ use chrono::serde::ts_seconds_option as to_tsopt;
 use serde::{Serialize, Deserialize};
 use serde_with::{serde_as,DurationSeconds};
 use confy;
-use std::{fs,path::Path};
+use std::fs;
 
 #[serde_as]
 #[derive(Serialize, Deserialize)]
@@ -16,6 +16,9 @@ pub struct TimerInfo {
     pub start_work: Option<DateTime<Utc>>,
     #[serde(with = "to_tsopt")]
     pub start_rest: Option<DateTime<Utc>>,
+    #[serde(with = "to_tsopt")]
+    pub pause_time: Option<DateTime<Utc>>,
+
     pub run_state: bool,
 }
 
@@ -25,6 +28,7 @@ impl std::default::Default for TimerInfo {
             start_rest: Some(Utc::now() + chrono::Duration::minutes(25)),
             work_duration: Duration::minutes(25), // Default to 25 minutes
             rest_duration: Duration::minutes(5), // Default to 5 minutes
+            pause_time: Some(Utc::now()),
             run_state: false,
         }
     }
@@ -39,21 +43,11 @@ pub fn save_timer(timer_info: &TimerInfo) -> Result<(), confy::ConfyError> {
 }
 
 pub fn reset_timer() {
-    /*
-    let default_timer_info = TimerInfo {
-        start_work: Some(Utc::now()),
-        start_rest: Some(Utc::now() + Duration::seconds(25)),
-        work_duration: Duration::seconds(25),
-        rest_duration: Duration::seconds(5),
-        run_state: false,
-    };
-    confy::store("timer_state", None, default_timer_info)
-    */
-// Define the path of the configuration file
-let config_path = Path::new("Users/tenboker/Library/Application Support/rs.timer_state/default-config.toml");
+   // Define the path of the configuration file
+let config_path = confy::get_configuration_file_path("timer_state", None);
 
 // Delete the configuration file
-match fs::remove_file(&config_path) {
+match fs::remove_file(&config_path.unwrap()) {
     Ok(_) => println!("Configuration file deleted successfully."),
     Err(err) => println!("Failed to delete configuration file: {}", err),
 }

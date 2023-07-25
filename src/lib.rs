@@ -1,7 +1,8 @@
 use clap::{Parser,Subcommand};
+use std::sync::{Arc,Mutex};
 use crossterm::event::{self,Event, KeyCode};
 use std::io;
-mod ui;
+pub mod ui;
 pub mod timer;
 pub mod config;
 
@@ -70,11 +71,12 @@ pub fn parse_args() -> Args {
 }
 
 
-
-
 pub async fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut receiver: tokio::sync::mpsc::Receiver<String>) -> io::Result<()> {
-   let (tx, rx) = std::sync::mpsc::channel();
+    let (tx, rx) = std::sync::mpsc::channel();
     
+    let timer_info: config::TimerInfo = config::load_timer().unwrap();
+    let run_state: Arc<Mutex<bool>> = Arc::new(Mutex::new(timer_info.run_state.clone()));
+    let run_state_clone = run_state.clone();
     std::thread::spawn(move || {
         loop {
             if let Event::Key(key) = event::read().unwrap() {
@@ -82,12 +84,37 @@ pub async fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut receiver: tokio
                     tx.send(()).unwrap();
                     break;
                 }
+
+                if let KeyCode::Char('p') = key.code {
+                    let mut timer_info = config::load_timer().unwrap();
+                    // Calculate the elapsed time since the work/rest started
+                    let start_work_elapsed = chrono::Utc::now().signed_duration_since(timer_info.start_work.unwrap());
+                    let start_rest_elapsed = chrono::Utc::now().signed_duration_since(timer_info.start_rest.unwrap());
+                    // Calculate the remaining time and store it in timer_info
+                    timer_info.work_duration = timer_info.work_duration - start_work_elapsed;
+                    timer_info.rest_duration = timer_info.rest_duration - start_rest_elapsed;
+                    // Update pause_time and run_state
+                    timer_info.pause_time = Some(chrono::Utc::now());
+                    timer_info.run_state = false;
+                    // Save the updated timer_info
+                    config::save_timer(&timer_info).unwrap();
+                    // Update the shared run_state
+                    let mut run_state = run_state_clone.lock().unwrap();
+                    *run_state = false;
+                }
             }
         }
     });
 
     loop {
-        let timer_message = receiver.recv().await.unwrap_or_else(|| String::from("Please enter timer."));
+        let timer_message = {
+            let run_state = run_state.lock().unwrap();
+            if *run_state {
+                receiver.recv().await.unwrap_or_else(|| String::from("Please enter timer."))
+            } else {
+                timer::paused(&timer_info)
+            }
+        };
         terminal.draw(|f| {
             ui::tim_display(f, &timer_message);
             ui::ui(f);
@@ -100,4 +127,3 @@ pub async fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut receiver: tokio
 
     Ok(())
 }
-

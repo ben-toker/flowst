@@ -8,10 +8,9 @@ use crossterm::{
 use tui::{Terminal,backend::CrosstermBackend};
 use std::{error::Error, io};
 
-mod config;
 use flowst::timer;
 
-use self::config::{TimerInfo, load_timer, save_timer, reset_timer};
+use flowst::config::{TimerInfo, load_timer, save_timer, reset_timer};
 
 #[tokio::main(flavor="current_thread")]
 async fn main() -> Result<(), Box<dyn Error>> {
@@ -27,12 +26,13 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 work_duration: Duration::minutes(work),
                 rest_duration: Duration::minutes(rest),
                 start_rest: Some(Utc::now() + Duration::minutes(work)),
+                pause_time: Some(Utc::now()),
                 run_state: true
             };
             
             save_timer(&timer_info)?;
 
-            let mut rec = timer::start_timer(timer_info.work_duration,timer_info.rest_duration,timer_info.run_state).await;
+            let mut rec = timer::start_timer(timer_info.work_duration,timer_info.rest_duration).await;
             if let Some(message) = rec.recv().await {
                 println!("Timer started. {} until break", message);
             }
@@ -72,17 +72,17 @@ async fn main() -> Result<(), Box<dyn Error>> {
             let mut terminal = Terminal::new(backend)?;
 
         let timer_info = load_timer()?;
-
+        
+        let run_state = timer_info.run_state;
         let start_work_elapsed = Utc::now().signed_duration_since(timer_info.start_work.unwrap());
         let start_rest_elapsed = Utc::now().signed_duration_since(timer_info.start_rest.unwrap());
 
-            let rem_work = if start_work_elapsed.num_seconds() <=0 {timer_info.work_duration} else {timer_info.work_duration - start_work_elapsed};
-    
-            let rem_rest = if start_rest_elapsed.num_seconds() <=0 {timer_info.rest_duration} else {timer_info.rest_duration - start_rest_elapsed};
-   
-            let rec = timer::start_timer(rem_work,rem_rest,timer_info.run_state).await;
-            flowst::run_app(&mut terminal,rec).await?;
+        let rem_work = if start_work_elapsed.num_seconds() <=0 {timer_info.work_duration} else {timer_info.work_duration - start_work_elapsed};
 
+        let rem_rest = if start_rest_elapsed.num_seconds() <=0 {timer_info.rest_duration} else {timer_info.rest_duration - start_rest_elapsed};
+
+        let rec = timer::start_timer(rem_work,rem_rest).await;
+        flowst::run_app(&mut terminal,rec).await?;
 
             // restore terminal
             disable_raw_mode()?;
