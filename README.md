@@ -22,8 +22,8 @@
 This is designed to be a basic pomodoro CLI tool built w/ **Rust**. 
 
 Here are the present **TODOs**:
-- Make something a *bit* more polished.
-- 
+- pause/resume ! (async is complicated sometimes!!)
+- configs window (pre-select and make custom pomo configs!) 
 
 Currently done:
 - The basic application!
@@ -33,8 +33,7 @@ custom values to be inputted with -w (-work) or -r (-rest) flags.
 This will start the timer, without being able to pause.
 - basic TUI groundwork!
 - maintained state between window opens
-- pause/resume ! (async is complicated sometimes!!)
-- configs window (pre-select and make custom pomo configs!)
+
 
 Play branch:
 curently testing out new features! (TUI !)
