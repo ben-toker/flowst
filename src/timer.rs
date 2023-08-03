@@ -21,26 +21,40 @@ async fn countdown(seconds: Duration,  sender: tokio::sync::mpsc::Sender<String>
     Ok(())
 }
 
-pub fn paused(timer_info: &TimerInfo) -> String{
+pub async fn paused(timer_info: TimerInfo, sender: tokio::sync::mpsc::Sender<String>)-> Result<(),std::io::Error> {
         let start_work_elapsed = chrono::Utc::now().signed_duration_since(timer_info.start_work.unwrap());
 
-        let pause_elapsed = if start_work_elapsed.num_seconds() <=0 {
-            timer_info.start_work.unwrap().signed_duration_since(timer_info.pause_time.unwrap())
+        let pause_elapsed = if start_work_elapsed.num_seconds() <= timer_info.work_duration.num_seconds() {
+            timer_info.work_duration - timer_info.pause_time.unwrap().signed_duration_since(timer_info.start_work.unwrap())
         } else {
-            timer_info.start_rest.unwrap().signed_duration_since(timer_info.pause_time.unwrap())
+            timer_info.rest_duration - timer_info.pause_time.unwrap().signed_duration_since(timer_info.start_rest.unwrap())
         };
-
-        print_time(pause_elapsed.num_seconds())
+        
+        while !timer_info.run_state {
+            let message = print_time(pause_elapsed.num_seconds());
+            sender.send(message).await.unwrap();
+            tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+        }
+    Ok(())
 
 }
 
 
-pub async fn start_timer(work: Duration, rest: Duration) -> tokio::sync::mpsc::Receiver<String> {
+pub async fn start_timer(work: Duration, rest: Duration, timer_info: TimerInfo) -> tokio::sync::mpsc::Receiver<String> {
     let (sender, receiver) = mpsc::channel(1);
-    tokio::spawn(async move {
-        let _ = countdown(work, sender.clone()).await;
-        let _ = countdown(rest, sender).await;
-    });
+    let state = timer_info.run_state;
+
+    if state {
+        tokio::spawn(async move {
+            let _ = countdown(work, sender.clone()).await;
+            let _ = countdown(rest, sender).await;
+        });
+    }
+    else {
+        tokio::spawn(async move {
+            let _ = paused(timer_info,sender.clone()).await;
+        });
+    }
 
     receiver
 }

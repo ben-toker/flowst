@@ -87,34 +87,47 @@ pub async fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut receiver: tokio
 
                 if let KeyCode::Char('p') = key.code {
                     let mut timer_info = config::load_timer().unwrap();
-                    // Calculate the elapsed time since the work/rest started
-                    let start_work_elapsed = chrono::Utc::now().signed_duration_since(timer_info.start_work.unwrap());
-                    let start_rest_elapsed = chrono::Utc::now().signed_duration_since(timer_info.start_rest.unwrap());
-                    // Calculate the remaining time and store it in timer_info
-                    timer_info.work_duration = timer_info.work_duration - start_work_elapsed;
-                    timer_info.rest_duration = timer_info.rest_duration - start_rest_elapsed;
-                    // Update pause_time and run_state
-                    timer_info.pause_time = Some(chrono::Utc::now());
-                    timer_info.run_state = false;
-                    // Save the updated timer_info
-                    config::save_timer(&timer_info).unwrap();
-                    // Update the shared run_state
-                    let mut run_state = run_state_clone.lock().unwrap();
-                    *run_state = false;
+                    
+                    //If currently running
+                    if timer_info.run_state {
+                        // Update pause_time and run_state
+                        timer_info.pause_time = Some(chrono::Utc::now());
+                        timer_info.run_state = false;
+
+                        let mut run_state = run_state_clone.lock().unwrap();
+                        *run_state = false;
+
+                        config::save_timer(&timer_info).unwrap();
+
+                    }
+                    //If timer is paused
+                    else {
+                        let mut timer_info = config::load_timer().unwrap();
+                        timer_info.run_state = true;
+                        let mut run_state = run_state_clone.lock().unwrap();
+                        *run_state = true;
+
+                        let start_work_elapsed = chrono::Utc::now().signed_duration_since(timer_info.start_work.unwrap());
+
+                       if start_work_elapsed.num_seconds() <= timer_info.work_duration.num_seconds() {
+                            timer_info.work_duration = timer_info.work_duration - timer_info.pause_time.unwrap().signed_duration_since(timer_info.start_work.unwrap());
+                            timer_info.start_work = Some(chrono::Utc::now());
+                       } else {
+                            timer_info.rest_duration = timer_info.rest_duration - timer_info.pause_time.unwrap().signed_duration_since(timer_info.start_rest.unwrap());
+                            timer_info.start_rest = Some(chrono::Utc::now());
+                        };
+                            
+                        config::save_timer(&timer_info).unwrap();
+
+                    }
                 }
             }
         }
     });
 
     loop {
-        let timer_message = {
-            let run_state = run_state.lock().unwrap();
-            if *run_state {
-                receiver.recv().await.unwrap_or_else(|| String::from("Please enter timer."))
-            } else {
-                timer::paused(&timer_info)
-            }
-        };
+        let timer_message =  receiver.recv().await.unwrap_or_else(|| String::from("Please enter timer."));
+    
         terminal.draw(|f| {
             ui::tim_display(f, &timer_message);
             ui::ui(f);
