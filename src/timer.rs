@@ -40,11 +40,20 @@ pub async fn paused(timer_info: TimerInfo, sender: tokio::sync::mpsc::Sender<Str
 }
 
 
-pub async fn start_timer(work: Duration, rest: Duration, timer_info: TimerInfo) -> tokio::sync::mpsc::Receiver<String> {
-    let (sender, receiver) = mpsc::channel(1);
-    let state = timer_info.run_state;
+pub async fn start_timer() -> tokio::sync::mpsc::Receiver<String> {
 
-    if state {
+  let timer_info = crate::config::load_timer().unwrap();
+
+  let start_work_elapsed = chrono::Utc::now().signed_duration_since(timer_info.start_work.unwrap());
+  let start_rest_elapsed = chrono::Utc::now().signed_duration_since(timer_info.start_rest.unwrap());
+
+  let work = if start_work_elapsed.num_seconds() <=0 {timer_info.work_duration} else {timer_info.work_duration - start_work_elapsed};
+  let rest = if start_rest_elapsed.num_seconds() <=0 {timer_info.rest_duration} else {timer_info.rest_duration - start_rest_elapsed};
+        
+  let (sender, receiver) = mpsc::channel(1);
+  let state = timer_info.run_state;
+
+  if state {
         tokio::spawn(async move {
             let _ = countdown(work, sender.clone()).await;
             let _ = countdown(rest, sender).await;

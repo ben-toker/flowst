@@ -1,5 +1,4 @@
 use clap::{Parser,Subcommand};
-use std::sync::{Arc,Mutex};
 use crossterm::event::{self,Event, KeyCode};
 use std::io;
 pub mod ui;
@@ -70,19 +69,21 @@ pub fn parse_args() -> Args {
     Args::parse()
 }
 
+enum Message {
+    Quit,
+    UpdateTimer,
+}
+
+
 
 pub async fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut receiver: tokio::sync::mpsc::Receiver<String>) -> io::Result<()> {
     let (tx, rx) = std::sync::mpsc::channel();
-    
-    let timer_info: config::TimerInfo = config::load_timer().unwrap();
-    let run_state: Arc<Mutex<bool>> = Arc::new(Mutex::new(timer_info.run_state.clone()));
-    let run_state_clone = run_state.clone();
+
     std::thread::spawn(move || {
         loop {
             if let Event::Key(key) = event::read().unwrap() {
                 if let KeyCode::Char('q') = key.code {
-                    tx.send(()).unwrap();
-                    break;
+                    tx.send(Message::Quit).unwrap();
                 }
 
                 if let KeyCode::Char('p') = key.code {
@@ -94,19 +95,16 @@ pub async fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut receiver: tokio
                         timer_info.pause_time = Some(chrono::Utc::now());
                         timer_info.run_state = false;
 
-                        let mut run_state = run_state_clone.lock().unwrap();
-                        *run_state = false;
-
                         config::save_timer(&timer_info).unwrap();
 
+                        //Update message
+                        tx.send(Message::UpdateTimer).unwrap();
                     }
                     //If timer is paused
                     else {
                         let mut timer_info = config::load_timer().unwrap();
                         timer_info.run_state = true;
-                        let mut run_state = run_state_clone.lock().unwrap();
-                        *run_state = true;
-
+               
                         let start_work_elapsed = chrono::Utc::now().signed_duration_since(timer_info.start_work.unwrap());
 
                        if start_work_elapsed.num_seconds() <= timer_info.work_duration.num_seconds() {
@@ -119,23 +117,44 @@ pub async fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut receiver: tokio
                             
                         config::save_timer(&timer_info).unwrap();
 
+                        //Update message
+                        tx.send(Message::UpdateTimer).unwrap();
+
                     }
                 }
             }
         }
     });
-
-    loop {
-        let timer_message =  receiver.recv().await.unwrap_or_else(|| String::from("Please enter timer."));
     
+    let mut timer_message: String;
+    let mut changed = false;
+    
+    loop {
+        let run_state = config::load_timer().unwrap().run_state;
+        timer_message = if !changed {
+            receiver.recv().await.unwrap_or_else(|| String::from("Please enter timer."))
+        } else {
+            if !run_state { 
+                receiver.recv().await.unwrap_or_else(|| String::from("Please enter timer."))
+            }
+            else {
+                "Paused.".to_string()
+            }
+        };
+        match rx.try_recv() {
+            Ok(Message::Quit) => break,
+            Ok(Message::UpdateTimer) => {
+                changed = true;
+            },
+            Err(_) => {},
+        }
+
         terminal.draw(|f| {
             ui::tim_display(f, &timer_message);
             ui::ui(f);
         })?;
     
-        if rx.try_recv().is_ok() {
-            break;
-        }
+       
     }
 
     Ok(())

@@ -32,7 +32,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
             
             save_timer(&timer_info)?;
 
-            let mut rec = timer::start_timer(timer_info.work_duration,timer_info.rest_duration, timer_info).await;
+            let mut rec = timer::start_timer().await;
             if let Some(message) = rec.recv().await {
                 println!("Timer started. {} until break", message);
             }
@@ -71,16 +71,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
             let backend = CrosstermBackend::new(stdout);
             let mut terminal = Terminal::new(backend)?;
 
-        let timer_info = load_timer()?;
-        
-        let start_work_elapsed = Utc::now().signed_duration_since(timer_info.start_work.unwrap());
-        let start_rest_elapsed = Utc::now().signed_duration_since(timer_info.start_rest.unwrap());
-
-        let rem_work = if start_work_elapsed.num_seconds() <=0 {timer_info.work_duration} else {timer_info.work_duration - start_work_elapsed};
-
-        let rem_rest = if start_rest_elapsed.num_seconds() <=0 {timer_info.rest_duration} else {timer_info.rest_duration - start_rest_elapsed};
-            
-        let rec = timer::start_timer(rem_work,rem_rest, timer_info).await;
+              let rec = timer::start_timer().await;
        
         flowst::run_app(&mut terminal,rec).await?;
 
