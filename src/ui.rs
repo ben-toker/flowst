@@ -5,7 +5,7 @@ use tui::{
     layout::{Alignment, Constraint, Direction, Layout},
     style::{Color, Modifier, Style},
     text::{Span,Spans,Text},
-    widgets::{Block, BorderType, Borders,Paragraph,Wrap},
+    widgets::{Block, BorderType, Borders,Paragraph,List,ListItem,ListState,Wrap},
     Frame, Terminal,
 };
 
@@ -56,19 +56,39 @@ pub fn tim_display<B: Backend>(f: &mut Frame<B>, tim_msg: &str) {
     f.render_widget(paragraph, inner_area);
 }
 
+pub fn config_display<B: Backend>(f: &mut Frame<B>, selected: &mut tui::widgets::ListState) {
+    let chunks = chunks(f);
 
-
-pub fn ui<B: Backend>(f: &mut Frame<B>) {
-   let chunks = chunks(f);
-
- 
-    //timer logic to be put into block
-
+  //Config block
     let block = Block::default()
          .title("Configs")
          .borders(Borders::ALL);
     f.render_widget(block, chunks[1]);
 
+    let inner_area = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+                     Constraint::Percentage(10),
+                     Constraint::Percentage(90),
+        ].as_ref())
+        .margin(1)
+        .split(chunks[1])[1];
+    
+    let items = [ListItem::new("25 : 5"),ListItem::new( "50 : 10"),ListItem::new( "60 : 15")];
+      let conflist = List::new(items)
+        .block(Block::default().title("Timers").borders(Borders::ALL))
+        .style(Style::default().fg(Color::White))
+        .highlight_style(Style::default().add_modifier(Modifier::ITALIC))
+        .highlight_symbol(">>");
+
+    f.render_stateful_widget(conflist,inner_area, selected);
+
+}
+
+pub fn ui<B: Backend>(f: &mut Frame<B>) {
+   let chunks = chunks(f); 
+    
+  
     //Welcome logo
 
     let block = Block::default()
@@ -79,7 +99,7 @@ pub fn ui<B: Backend>(f: &mut Frame<B>) {
     let inner_area = Layout::default()
         .direction(Direction::Vertical)
         .constraints([Constraint::Percentage(100)].as_ref())
-        .margin(1)  // Adjust this value to create a margin inside the Block.
+        .margin(1)  
         .split(chunks[2])[0];
 
     let style = Style::default()
@@ -87,26 +107,19 @@ pub fn ui<B: Backend>(f: &mut Frame<B>) {
         .bg(Color::Black)
         .add_modifier(Modifier::BOLD);
 
-     let logo = Text::styled(r#"                                                          
-                                                              
-          ,--,                                        ___     
-  .--., ,--.'|                                      ,--.'|_   
-,--.'  \|  | :     ,---.           .---.            |  | :,'  
-|  | /\/:  : '    '   ,'\         /. ./|  .--.--.   :  : ' :  
-:  : :  |  ' |   /   /   |     .-'-. ' | /  /    '.;__,'  /   
-:  | |-,'  | |  .   ; ,. :    /___/ \: ||  :  /`./|  |   |    
-|  : :/||  | :  '   | |: : .-'.. '   ' .|  :  ;_  :__,'| :    
-|  |  .''  : |__'   | .; :/___/ \:     ' \  \    `. '  : |__  
-'  : '  |  | '.'|   :    |.   \  ' .\     `----.   \|  | '.'| 
-|  | |  ;  :    ;\   \  /  \   \   ' \ | /  /`--'  /;  :    ; 
-|  : \  |  ,   /  `----'    \   \  |--" '--'.     / |  ,   /  
-|  |,'   ---`-'              \   \ |      `--'---'   ---`-'   
-`--'                          '---"                           
+     let logo = Text::styled(r#" 
+   __ _                   _   
+  / _| |                 | |  
+ | |_| | _____      _____| |_ 
+ |  _| |/ _ \ \ /\ / / __| __|
+ | | | | (_) \ V  V /\__ \ |_ 
+ |_| |_|\___/ \_/\_/ |___/\__|                                                     
 "#, style);
      let paragraph = Paragraph::new(logo).wrap(Wrap{ trim: false});
     
     f.render_widget(paragraph, inner_area);
 
+    //Controls block
     let block = Block::default()
          .title("Controls")
          .borders(Borders::ALL);
@@ -115,7 +128,7 @@ pub fn ui<B: Backend>(f: &mut Frame<B>) {
     let inner_area = Layout::default()
         .direction(Direction::Vertical)
         .constraints([Constraint::Percentage(100)].as_ref())
-        .margin(1)  // Adjust this value to create a margin inside the Block.
+        .margin(1)  
         .split(chunks[3])[0];
 
     let text = vec![
