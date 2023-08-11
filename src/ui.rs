@@ -49,8 +49,12 @@ pub fn tim_display<B: Backend>(f: &mut Frame<B>, tim_msg: &str) {
         .margin(1)  
         .split(chunks[0])[0];
 
+    let style = Style::default()
+        .fg(Color::Yellow)
+        .add_modifier(Modifier::ITALIC);
+
     let text = vec![
-        tui::text::Spans::from(tui::text::Span::raw(tim_msg)),
+        tui::text::Spans::from(Span::styled(tim_msg,style)),
     ]; 
     let paragraph = Paragraph::new(text).wrap(Wrap { trim:  true });
     f.render_widget(paragraph, inner_area);
@@ -74,11 +78,16 @@ pub fn config_display<B: Backend>(f: &mut Frame<B>, selected: &mut tui::widgets:
         .margin(1)
         .split(chunks[1])[1];
     
-    let items = [ListItem::new("25 : 5"),ListItem::new( "50 : 10"),ListItem::new( "60 : 15")];
+    let items = [ListItem::new("25 : 5"),ListItem::new("50 : 10"),ListItem::new("60 : 15")];
       let conflist = List::new(items)
         .block(Block::default().title("Timers").borders(Borders::ALL))
         .style(Style::default().fg(Color::White))
-        .highlight_style(Style::default().add_modifier(Modifier::ITALIC))
+        .highlight_style(
+            Style::default()
+            .add_modifier(Modifier::ITALIC)
+            .add_modifier(Modifier::BOLD)
+            .fg(Color::Blue)
+            )
         .highlight_symbol(">>");
 
     f.render_stateful_widget(conflist,inner_area, selected);
@@ -104,7 +113,6 @@ pub fn ui<B: Backend>(f: &mut Frame<B>) {
 
     let style = Style::default()
         .fg(Color::Cyan)
-        .bg(Color::Black)
         .add_modifier(Modifier::BOLD);
 
      let logo = Text::styled(r#" 

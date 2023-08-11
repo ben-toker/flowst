@@ -101,23 +101,15 @@ pub async fn run_app<B: Backend>(terminal: &mut Terminal<B>, cancel: Arc<AtomicB
                         
                         //If currently running
                         if timer_info.run_state {
-                            // Update pause_time and run_state
-                            timer_info.pause_time = Some(chrono::Utc::now());
-                            timer_info.run_state = false;
-
-                            config::save_timer(&timer_info).unwrap();
-
                             //Update message
                             tx.send(Message::UpdateTimer).unwrap();
                         }
                         //If timer is paused
                         else {
-                            let mut timer_info = config::load_timer().unwrap();
                             timer_info.run_state = true;
-                   
                             let start_work_elapsed = chrono::Utc::now().signed_duration_since(timer_info.start_work.unwrap());
 
-                           if start_work_elapsed.num_seconds() <= timer_info.work_duration.num_seconds() {
+                            if start_work_elapsed.num_seconds() <= timer_info.work_duration.num_seconds() {
                                 timer_info.work_duration = timer_info.work_duration - timer_info.pause_time.unwrap().signed_duration_since(timer_info.start_work.unwrap());
                                 timer_info.start_work = Some(chrono::Utc::now());
                            } else {
@@ -159,12 +151,14 @@ pub async fn run_app<B: Backend>(terminal: &mut Terminal<B>, cancel: Arc<AtomicB
     });
     
     let mut timer_message: String;
-    let mut changed = false;
+    //let mut changed = false;
 
     
     loop {
        let run_state = config::load_timer().unwrap().run_state;
-        timer_message =  if !changed {
+        timer_message = receiver.recv().await.unwrap_or_else(|| String::from("Please enter timer."));
+
+        /*if !changed {
             receiver.recv().await.unwrap_or_else(|| String::from("Please enter timer."))
         } else {
             if run_state { 
@@ -175,10 +169,23 @@ pub async fn run_app<B: Backend>(terminal: &mut Terminal<B>, cancel: Arc<AtomicB
             }
         };        
 
+        */
         match rx.try_recv() {
             Ok(Message::Quit) => break,
-            Ok(Message::UpdateTimer) => {
-                changed = true;
+            Ok(Message::UpdateTimer) => {  
+                let mut timer_info = config::load_timer().unwrap();
+                if run_state {
+                    timer_info.pause_time = Some(chrono::Utc::now());
+                    timer_info.run_state = false;
+                    let _ = config::save_timer(&timer_info);
+                    cancel.store(true, Ordering::Relaxed);
+                } else {
+                    let _ = config::save_timer(&timer_info);
+                    cancel.store(false, Ordering::Relaxed);
+                }
+                receiver.close();
+                tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+                (receiver, cancel) = timer::start_timer().await;
             },
             Ok(Message::SelectedIndex(index)) => list_state.select(Some(index)),
             Ok(Message::Enter) => {

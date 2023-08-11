@@ -49,7 +49,7 @@ pub fn save_cstm(work: i64, rest: i64) -> Result<(), confy::ConfyError> {
             work_duration: Duration::minutes(work),
             rest_duration: Duration::minutes(rest),
             pause_time: Some(Utc::now()),
-            run_state: true,
+            run_state: false,
 
     };
     save_timer(&timer_info)

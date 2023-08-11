@@ -20,14 +20,16 @@ async fn countdown(seconds: Duration, cancel: Arc<AtomicBool>,  sender: tokio::s
 
         let countdown_string = print_time(i);          
 
-        sender.send(countdown_string).await.unwrap();
+        if let Err(_) = sender.send(countdown_string).await {
+            break;
+        }
 
         tokio::time::sleep(std::time::Duration::from_secs(1)).await;
     }
     Ok(())
 }
 
-pub async fn paused(timer_info: TimerInfo, sender: tokio::sync::mpsc::Sender<String>)-> Result<(),std::io::Error> {
+pub async fn paused(timer_info: TimerInfo, cancel: Arc<AtomicBool>, sender: tokio::sync::mpsc::Sender<String>)-> Result<(),std::io::Error> {
         let start_work_elapsed = chrono::Utc::now().signed_duration_since(timer_info.start_work.unwrap());
 
         let pause_elapsed = if start_work_elapsed.num_seconds() <= timer_info.work_duration.num_seconds() {
@@ -37,8 +39,13 @@ pub async fn paused(timer_info: TimerInfo, sender: tokio::sync::mpsc::Sender<Str
         };
         
         while !timer_info.run_state {
+            if cancel.load(Ordering::Relaxed) {
+                break;
+             }  
             let message = print_time(pause_elapsed.num_seconds());
-            sender.send(message).await.unwrap();
+            if let Err(_) = sender.send(message).await {
+                break;
+            }
             tokio::time::sleep(std::time::Duration::from_secs(1)).await;
         }
     Ok(())
@@ -51,6 +58,7 @@ pub async fn start_timer() -> (tokio::sync::mpsc::Receiver<String>, Arc<AtomicBo
   let cancel = Arc::new(AtomicBool::new(false));
   let cancel1 = cancel.clone();
   let cancel2 = cancel.clone();
+  let cancel3 = cancel.clone();
 
   let start_work_elapsed = chrono::Utc::now().signed_duration_since(timer_info.start_work.unwrap());
   let start_rest_elapsed = chrono::Utc::now().signed_duration_since(timer_info.start_rest.unwrap());
@@ -70,7 +78,7 @@ pub async fn start_timer() -> (tokio::sync::mpsc::Receiver<String>, Arc<AtomicBo
     }
     else {
         tokio::spawn(async move {
-            let _ = paused(timer_info,sender.clone()).await;
+            let _ = paused(timer_info,cancel3, sender.clone()).await;
         });
     }
 
