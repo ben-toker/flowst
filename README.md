@@ -48,6 +48,10 @@ flowst start
 
 flowst start -w 40 -r 20
 
+# Reset configuration file:
+
+flowst reset
+
 # Run the app:
 
 flowst app

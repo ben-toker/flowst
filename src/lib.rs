@@ -79,7 +79,6 @@ enum Message {
 }
 
 
-
 pub async fn run_app<B: Backend>(terminal: &mut Terminal<B>, cancel: Arc<AtomicBool>, receiver: tokio::sync::mpsc::Receiver<String>) -> io::Result<()> {
     let (tx, rx) = std::sync::mpsc::channel();
 

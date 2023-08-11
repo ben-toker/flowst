@@ -41,22 +41,19 @@ async fn main() -> Result<(), Box<dyn Error>> {
             Ok(())
         },
         Action::Toggle => {
-            let timer_info = load_timer()?;
-            let new_timer: TimerInfo;
+            let mut timer_info = load_timer()?;
+            
             if timer_info.run_state {
-                new_timer = TimerInfo {
-                    run_state: false,
-                    ..timer_info
-                }
-            }
+                println!("Timer paused.");
+            }   
             else {
-                new_timer = TimerInfo {
-                    run_state: true,
-                    ..timer_info
-                }
+                println!("Timer resumed.");
             }
 
-            save_timer(&new_timer)?;
+            timer_info.pause_time = Some(chrono::Utc::now());
+            timer_info.run_state = !timer_info.run_state;
+            save_timer(&timer_info)?;
+
 
             Ok(())
         },

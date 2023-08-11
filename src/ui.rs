@@ -98,7 +98,7 @@ pub fn ui<B: Backend>(f: &mut Frame<B>) {
    let chunks = chunks(f); 
     
   
-    //Welcome logo
+    //Welcome block
 
     let block = Block::default()
          .title("Welcome!")
