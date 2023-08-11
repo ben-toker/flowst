@@ -36,6 +36,10 @@ For now, to use this app, clone the repository and run the executable or use ``c
 
 # Usage
 ```
+# View CLAP interface
+
+flowst
+
 # Example command to start a 25 : 5 timer (standard)
 
 flowst start
