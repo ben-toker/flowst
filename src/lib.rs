@@ -1,9 +1,11 @@
 use clap::{Parser,Subcommand};
 use crossterm::event::{self,Event, KeyCode};
-use std::{io, thread::sleep};
+use std::io;
 pub mod ui;
 pub mod timer;
 pub mod config;
+
+use std::sync::{Arc,atomic::{AtomicBool,Ordering}};
 
 #[allow(unused_imports)]
 use tui::{
@@ -72,13 +74,16 @@ pub fn parse_args() -> Args {
 enum Message {
     Quit,
     UpdateTimer,
+    SelectedIndex(usize),
+    Enter,
 }
 
 
 
-pub async fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut receiver: tokio::sync::mpsc::Receiver<String>) -> io::Result<()> {
+pub async fn run_app<B: Backend>(terminal: &mut Terminal<B>, cancel: Arc<AtomicBool>, receiver: tokio::sync::mpsc::Receiver<String>) -> io::Result<()> {
     let (tx, rx) = std::sync::mpsc::channel();
-    let (selected_tx, selected_rx) = std::sync::mpsc::channel();
+
+    let (mut cancel, mut receiver) = (cancel, receiver);
     
     let mut list_state = ListState::default();
     list_state.select(Some(0));
@@ -132,14 +137,18 @@ pub async fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut receiver: tokio
                        if selected > 0 {
                             selected -= 1;
                        }
-                       selected_tx.send(selected).unwrap();
+                       tx.send(Message::SelectedIndex(selected)).unwrap();
                     },
 
                     KeyCode::Down => {
                         if selected < 2 {
                             selected += 1;
                         }
-                        selected_tx.send(selected).unwrap();
+                        tx.send(Message::SelectedIndex(selected)).unwrap();
+                    },
+
+                    KeyCode::Enter => {
+                        tx.send(Message::Enter).unwrap();
                     },
 
                     _ => {},
@@ -154,27 +163,36 @@ pub async fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut receiver: tokio
 
     
     loop {
-        let run_state = config::load_timer().unwrap().run_state;
-        timer_message = if !changed {
+       let run_state = config::load_timer().unwrap().run_state;
+        timer_message =  if !changed {
             receiver.recv().await.unwrap_or_else(|| String::from("Please enter timer."))
         } else {
-            if !run_state { 
+            if run_state { 
                 receiver.recv().await.unwrap_or_else(|| String::from("Please enter timer."))
             }
             else {
                 "Paused.".to_string()
             }
-        };
+        };        
+
         match rx.try_recv() {
             Ok(Message::Quit) => break,
             Ok(Message::UpdateTimer) => {
                 changed = true;
             },
+            Ok(Message::SelectedIndex(index)) => list_state.select(Some(index)),
+            Ok(Message::Enter) => {
+                cancel.store(true, Ordering::Relaxed);
+                let _ = match list_state.selected().unwrap() + 1 {
+                    1 => config::save_cstm(25, 5),
+                    2 => config::save_cstm(50, 10),
+                    3 => config::save_cstm(60, 15),
+                    _ => Ok({}),
+                };
+                receiver.close();
+                (receiver,cancel) = timer::start_timer().await;
+            },
             Err(_) => {},
-        }
-
-        if let Ok(selected) = selected_rx.try_recv() {
-            list_state.select(Some(selected));
         }
 
         terminal.draw(|f| {

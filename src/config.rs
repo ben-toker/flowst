@@ -42,6 +42,19 @@ pub fn save_timer(timer_info: &TimerInfo) -> Result<(), confy::ConfyError> {
     confy::store("timer_state", None, timer_info)
 }
 
+pub fn save_cstm(work: i64, rest: i64) -> Result<(), confy::ConfyError> {
+    let timer_info = TimerInfo {
+            start_work: Some(Utc::now()),
+            start_rest: Some(Utc::now() + chrono::Duration::minutes(work)),
+            work_duration: Duration::minutes(work),
+            rest_duration: Duration::minutes(rest),
+            pause_time: Some(Utc::now()),
+            run_state: true,
+
+    };
+    save_timer(&timer_info)
+}
+
 pub fn reset_timer() {
    // Define the path of the configuration file
 let config_path = confy::get_configuration_file_path("timer_state", None);
