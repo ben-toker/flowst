@@ -32,7 +32,8 @@ Features
 # Installation
 Might put it up on Homebrew, but not sure.
 
-For now, to use this app, clone the repository and run the executable or use ``cargo run``
+For now, to use this app, clone the repository and use  ``cargo build`` and ``cargo run``, or 
+download the executable on the latest release.
 
 # Usage
 ```
