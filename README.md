@@ -20,8 +20,6 @@
 # Flowst
 Flowst is a CLI tool for the Pomodoro Technique, built in Rust. It provides a user-friendly text-based interface for managing work and rest intervals, allowing you to stay focused and productive.
 
-Flowst Screenshot Optional screenshot of the application
-
 Features
 - Timer Management: Start, pause, and reset work and rest intervals
 - Interface: A text-based interface that displays the timer, configurations, welcome logo, and controls.
