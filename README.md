@@ -60,4 +60,8 @@ flowst app
 
 
 ```
+# Issues
+```
+    Not working on Windows correctly!
 
+```
