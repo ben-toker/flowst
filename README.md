@@ -65,3 +65,9 @@ flowst app
     Not working on Windows correctly!
 
 ```
+
+# Directives
+```
+    - Include *cassowary* crate to ensure scaling constraints
+    - Find out why this breaks on Windows and how to fix it.
+```

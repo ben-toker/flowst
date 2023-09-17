@@ -15,8 +15,8 @@ let chunks = Layout::default()
         .margin(1)
         .constraints(
             [
-                Constraint::Percentage(10),
-                Constraint::Percentage(80),
+                Constraint::Percentage(20),
+                Constraint::Percentage(70),
                 Constraint::Percentage(10),
             ].as_ref()
         )
