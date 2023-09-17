@@ -33,7 +33,7 @@ Features
 # Installation
 For mac users:
 ```
-brew tap flowst
+brew tap ben-toker/flowst
 brew install flowst
 
 ```
