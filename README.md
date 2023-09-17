@@ -31,10 +31,16 @@ Features
 - Keyboard Controls: Intuitive keybindings for controlling the timer and navigating the UI.
 
 # Installation
-Might put it up on Homebrew, but not sure.
+For mac users:
+```
+brew tap flowst
+brew install flowst
 
-For now, to use this app, clone the repository and use  ``cargo build`` and ``cargo run``, or 
-download the executable on the latest release.
+```
+**Not available on windows currently!**
+(You could try to install it by cloning the repo and compiling it with cargo, but
+it is completely fudged on this platform. I'm working on getting it to work on Windows.)
+
 
 # Usage
 ```
