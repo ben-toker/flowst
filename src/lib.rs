@@ -73,7 +73,7 @@ pub fn parse_args() -> Args {
 
 enum Message {
     Quit,
-    UpdateTimer,
+    PauseOrUnpauseTimer,
     SelectedIndex(usize),
     Enter,
 }
@@ -96,32 +96,7 @@ pub async fn run_app<B: Backend>(terminal: &mut Terminal<B>, cancel: Arc<AtomicB
                         tx.send(Message::Quit).unwrap();
                     },
                     KeyCode::Char('p') => {
-                        let mut timer_info = config::load_timer().unwrap();
-                        
-                        //If currently running
-                        if timer_info.run_state {
-                            //Update message
-                            tx.send(Message::UpdateTimer).unwrap();
-                        }
-                        //If timer is paused
-                        else {
-                            timer_info.run_state = true;
-                            let start_work_elapsed = chrono::Utc::now().signed_duration_since(timer_info.start_work.unwrap());
-
-                            if start_work_elapsed.num_seconds() <= timer_info.work_duration.num_seconds() {
-                                timer_info.work_duration = timer_info.work_duration - timer_info.pause_time.unwrap().signed_duration_since(timer_info.start_work.unwrap());
-                                timer_info.start_work = Some(chrono::Utc::now());
-                           } else {
-                                timer_info.rest_duration = timer_info.rest_duration - timer_info.pause_time.unwrap().signed_duration_since(timer_info.start_rest.unwrap());
-                                timer_info.start_rest = Some(chrono::Utc::now());
-                         };
-                                
-                            config::save_timer(&timer_info).unwrap();
-
-                            //Update message
-                            tx.send(Message::UpdateTimer).unwrap();
-
-                        }
+                        tx.send(Message::PauseOrUnpauseTimer).unwrap();
                     },
 
                     KeyCode::Up => {
@@ -149,13 +124,23 @@ pub async fn run_app<B: Backend>(terminal: &mut Terminal<B>, cancel: Arc<AtomicB
         }
     });
     
-    let mut timer_message: String;
+    let mut timer_message = String::from("Please enter timer.");
     //let mut changed = false;
 
     
     loop {
-       let run_state = config::load_timer().unwrap().run_state;
-        timer_message = receiver.recv().await.unwrap_or_else(|| String::from("Please enter timer."));
+        let run_state = config::load_timer().unwrap().run_state;
+        match receiver.try_recv() {
+            Ok(msg) => {
+                timer_message = String::from(msg);
+            },
+            Err(tokio::sync::mpsc::error::TryRecvError::Empty) => {
+                // no messsages left to handle right now!
+            },
+            Err(tokio::sync::mpsc::error::TryRecvError::Disconnected) => {
+                timer_message = String::from("Please enter timer.");
+            },
+        }
 
         /*if !changed {
             receiver.recv().await.unwrap_or_else(|| String::from("Please enter timer."))
@@ -171,19 +156,29 @@ pub async fn run_app<B: Backend>(terminal: &mut Terminal<B>, cancel: Arc<AtomicB
         */
         match rx.try_recv() {
             Ok(Message::Quit) => break,
-            Ok(Message::UpdateTimer) => {  
+            Ok(Message::PauseOrUnpauseTimer) => {  
                 let mut timer_info = config::load_timer().unwrap();
                 if run_state {
+                    // Pause timer
                     timer_info.pause_time = Some(chrono::Utc::now());
                     timer_info.run_state = false;
                     let _ = config::save_timer(&timer_info);
                     cancel.store(true, Ordering::Relaxed);
                 } else {
+                    // Unpause timer
+                    timer_info.run_state = true;
+                    let start_work_elapsed = chrono::Utc::now().signed_duration_since(timer_info.start_work.unwrap());
+                    if start_work_elapsed.num_seconds() <= timer_info.work_duration.num_seconds() {
+                        timer_info.work_duration = timer_info.work_duration - timer_info.pause_time.unwrap().signed_duration_since(timer_info.start_work.unwrap());
+                        timer_info.start_work = Some(chrono::Utc::now());
+                    } else {
+                        timer_info.rest_duration = timer_info.rest_duration - timer_info.pause_time.unwrap().signed_duration_since(timer_info.start_rest.unwrap());
+                        timer_info.start_rest = Some(chrono::Utc::now());
+                    };
                     let _ = config::save_timer(&timer_info);
                     cancel.store(false, Ordering::Relaxed);
                 }
                 receiver.close();
-                tokio::time::sleep(std::time::Duration::from_secs(1)).await;
                 (receiver, cancel) = timer::start_timer().await;
             },
             Ok(Message::SelectedIndex(index)) => list_state.select(Some(index)),
@@ -207,8 +202,7 @@ pub async fn run_app<B: Backend>(terminal: &mut Terminal<B>, cancel: Arc<AtomicB
             ui::config_display(f, &mut list_state);
         })?;
 
-      
-       
+        tokio::time::sleep(std::time::Duration::from_millis(60)).await;
     }
 
     Ok(())
