@@ -1,11 +1,14 @@
-use clap::{Parser,Subcommand};
-use crossterm::event::{self,Event, KeyCode};
+use clap::{Parser, Subcommand};
+use crossterm::event::{self, Event, KeyCode};
 use std::io;
-pub mod ui;
-pub mod timer;
 pub mod config;
+pub mod timer;
+pub mod ui;
 
-use std::sync::{Arc,atomic::{AtomicBool,Ordering}};
+use std::sync::{
+    atomic::{AtomicBool, Ordering},
+    Arc,
+};
 
 #[allow(unused_imports)]
 use tui::{
@@ -13,11 +16,9 @@ use tui::{
     layout::{Alignment, Constraint, Direction, Layout},
     style::{Color, Modifier, Style},
     text::Span,
-    widgets::{Block, BorderType, Borders,ListState},
+    widgets::{Block, BorderType, Borders, ListState},
     Frame, Terminal,
 };
-
-
 
 #[derive(Parser, Debug)]
 #[command(
@@ -78,12 +79,15 @@ enum Message {
     Enter,
 }
 
-
-pub async fn run_app<B: Backend>(terminal: &mut Terminal<B>, cancel: Arc<AtomicBool>, receiver: tokio::sync::mpsc::Receiver<String>) -> io::Result<()> {
+pub async fn run_app<B: Backend>(
+    terminal: &mut Terminal<B>,
+    cancel: Arc<AtomicBool>,
+    receiver: tokio::sync::mpsc::Receiver<String>,
+) -> io::Result<()> {
     let (tx, rx) = std::sync::mpsc::channel();
 
     let (mut cancel, mut receiver) = (cancel, receiver);
-    
+
     let mut list_state = ListState::default();
     list_state.select(Some(0));
 
@@ -94,69 +98,67 @@ pub async fn run_app<B: Backend>(terminal: &mut Terminal<B>, cancel: Arc<AtomicB
                 match key.code {
                     KeyCode::Char('q') => {
                         tx.send(Message::Quit).unwrap();
-                    },
+                    }
                     KeyCode::Char('p') => {
                         tx.send(Message::PauseOrUnpauseTimer).unwrap();
-                    },
+                    }
 
                     KeyCode::Up | KeyCode::Char('k') => {
-                       if selected > 0 {
+                        if selected > 0 {
                             selected -= 1;
-                       }
-                       tx.send(Message::SelectedIndex(selected)).unwrap();
-                    },
+                        }
+                        tx.send(Message::SelectedIndex(selected)).unwrap();
+                    }
 
                     KeyCode::Down | KeyCode::Char('j') => {
                         if selected < 2 {
                             selected += 1;
                         }
                         tx.send(Message::SelectedIndex(selected)).unwrap();
-                    },
+                    }
 
                     KeyCode::Enter => {
                         tx.send(Message::Enter).unwrap();
-                    },
+                    }
 
-                    _ => {},
-
-            }
+                    _ => {}
+                }
             }
         }
     });
-    
+
     let mut timer_message = String::from("Please enter timer.");
     //let mut changed = false;
 
-    
     loop {
         let run_state = config::load_timer().unwrap().run_state;
         match receiver.try_recv() {
             Ok(msg) => {
                 timer_message = String::from(msg);
-            },
+            }
             Err(tokio::sync::mpsc::error::TryRecvError::Empty) => {
                 // no messsages left to handle right now!
-            },
+            }
             Err(tokio::sync::mpsc::error::TryRecvError::Disconnected) => {
                 timer_message = String::from("Please enter timer.");
-            },
+            }
         }
 
         /*if !changed {
             receiver.recv().await.unwrap_or_else(|| String::from("Please enter timer."))
         } else {
-            if run_state { 
+            if run_state {
                 receiver.recv().await.unwrap_or_else(|| String::from("Please enter timer."))
             }
             else {
                 "Paused.".to_string()
             }
-        };        
+        };
 
         */
         match rx.try_recv() {
             Ok(Message::Quit) => break,
-            Ok(Message::PauseOrUnpauseTimer) => {  
+            Ok(Message::PauseOrUnpauseTimer) => {
                 let mut timer_info = config::load_timer().unwrap();
                 if run_state {
                     // Pause timer
@@ -167,12 +169,21 @@ pub async fn run_app<B: Backend>(terminal: &mut Terminal<B>, cancel: Arc<AtomicB
                 } else {
                     // Unpause timer
                     timer_info.run_state = true;
-                    let start_work_elapsed = chrono::Utc::now().signed_duration_since(timer_info.start_work.unwrap());
+                    let start_work_elapsed =
+                        chrono::Utc::now().signed_duration_since(timer_info.start_work.unwrap());
                     if start_work_elapsed.num_seconds() <= timer_info.work_duration.num_seconds() {
-                        timer_info.work_duration = timer_info.work_duration - timer_info.pause_time.unwrap().signed_duration_since(timer_info.start_work.unwrap());
+                        timer_info.work_duration = timer_info.work_duration
+                            - timer_info
+                                .pause_time
+                                .unwrap()
+                                .signed_duration_since(timer_info.start_work.unwrap());
                         timer_info.start_work = Some(chrono::Utc::now());
                     } else {
-                        timer_info.rest_duration = timer_info.rest_duration - timer_info.pause_time.unwrap().signed_duration_since(timer_info.start_rest.unwrap());
+                        timer_info.rest_duration = timer_info.rest_duration
+                            - timer_info
+                                .pause_time
+                                .unwrap()
+                                .signed_duration_since(timer_info.start_rest.unwrap());
                         timer_info.start_rest = Some(chrono::Utc::now());
                     };
                     let _ = config::save_timer(&timer_info);
@@ -180,7 +191,7 @@ pub async fn run_app<B: Backend>(terminal: &mut Terminal<B>, cancel: Arc<AtomicB
                 }
                 receiver.close();
                 (receiver, cancel) = timer::start_timer().await;
-            },
+            }
             Ok(Message::SelectedIndex(index)) => list_state.select(Some(index)),
             Ok(Message::Enter) => {
                 cancel.store(true, Ordering::Relaxed);
@@ -191,9 +202,9 @@ pub async fn run_app<B: Backend>(terminal: &mut Terminal<B>, cancel: Arc<AtomicB
                     _ => Ok({}),
                 };
                 receiver.close();
-                (receiver,cancel) = timer::start_timer().await;
-            },
-            Err(_) => {},
+                (receiver, cancel) = timer::start_timer().await;
+            }
+            Err(_) => {}
         }
 
         terminal.draw(|f| {
