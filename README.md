@@ -37,6 +37,8 @@ brew tap ben-toker/flowst
 brew install flowst
 
 ```
+In order to use the most recent version of the project, cloning the repo and re-building the app would be necessary. 
+
 **Not available on windows currently!**
 (You could try to install it by cloning the repo and compiling it with cargo, but
 it is completely fudged on this platform. I'm working on getting it to work on Windows.)

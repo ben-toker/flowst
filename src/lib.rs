@@ -184,13 +184,13 @@ pub async fn run_app<B: Backend>(terminal: &mut Terminal<B>, cancel: Arc<AtomicB
             Ok(Message::SelectedIndex(index)) => list_state.select(Some(index)),
             Ok(Message::Enter) => {
                 cancel.store(true, Ordering::Relaxed);
+                receiver.close();
                 let _ = match list_state.selected().unwrap() + 1 {
                     1 => config::save_cstm(25, 5),
                     2 => config::save_cstm(50, 10),
                     3 => config::save_cstm(60, 15),
                     _ => Ok({}),
                 };
-                receiver.close();
                 (receiver,cancel) = timer::start_timer().await;
             },
             Err(_) => {},
