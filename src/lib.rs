@@ -99,14 +99,14 @@ pub async fn run_app<B: Backend>(terminal: &mut Terminal<B>, cancel: Arc<AtomicB
                         tx.send(Message::PauseOrUnpauseTimer).unwrap();
                     },
 
-                    KeyCode::Up => {
+                    KeyCode::Up | KeyCode::Char('k') => {
                        if selected > 0 {
                             selected -= 1;
                        }
                        tx.send(Message::SelectedIndex(selected)).unwrap();
                     },
 
-                    KeyCode::Down => {
+                    KeyCode::Down | KeyCode::Char('j') => {
                         if selected < 2 {
                             selected += 1;
                         }
