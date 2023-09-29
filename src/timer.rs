@@ -58,15 +58,17 @@ pub async fn paused(
                     .signed_duration_since(timer_info.start_rest.unwrap())
         };
 
-    while !timer_info.run_state {
-        if cancel.load(Ordering::Relaxed) {
-            break;
+    if !timer_info.run_state {
+        loop {
+            if cancel.load(Ordering::Relaxed) {
+                break;
+            }
+            let message = print_time(pause_elapsed.num_seconds());
+            if let Err(_) = sender.send(message).await {
+                break;
+            }
+            tokio::time::sleep(std::time::Duration::from_secs(1)).await;
         }
-        let message = print_time(pause_elapsed.num_seconds());
-        if let Err(_) = sender.send(message).await {
-            break;
-        }
-        tokio::time::sleep(std::time::Duration::from_secs(1)).await;
     }
     Ok(())
 }
