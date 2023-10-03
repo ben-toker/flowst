@@ -2,6 +2,7 @@ use clap::{Parser, Subcommand};
 use crossterm::event::{self, Event, KeyCode};
 use std::io;
 pub mod config;
+pub mod notif;
 pub mod timer;
 pub mod ui;
 
@@ -144,7 +145,11 @@ pub async fn run_app<B: Backend>(
         }
 
         match rx.try_recv() {
-            Ok(Message::Quit) => break,
+            Ok(Message::Quit) => {
+                cancel.store(true, Ordering::Relaxed); // Set the cancel flag
+                tokio::time::sleep(std::time::Duration::from_millis(500)).await; // Allow some time for tasks to recognize the cancelation
+                break;
+            }
             Ok(Message::PauseOrUnpauseTimer) => {
                 let mut timer_info = config::load_timer().unwrap();
                 if run_state {

@@ -1,4 +1,5 @@
 use crate::config::TimerInfo;
+use crate::notif;
 use chrono::Duration;
 use std::sync::{
     atomic::{AtomicBool, Ordering},
@@ -31,6 +32,12 @@ async fn countdown(
         }
 
         tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+    }
+
+    if !cancel.load(Ordering::Relaxed) {
+        //This check ensures that the bell plays at the end of the
+        //timer; otherwise, it would play anytime you quit the app.
+        notif::play_bell_sound();
     }
     Ok(())
 }
@@ -76,9 +83,6 @@ pub async fn paused(
 pub async fn start_timer() -> (tokio::sync::mpsc::Receiver<String>, Arc<AtomicBool>) {
     let timer_info = crate::config::load_timer().unwrap();
     let cancel = Arc::new(AtomicBool::new(false));
-    let cancel1 = cancel.clone();
-    let cancel2 = cancel.clone();
-    let cancel3 = cancel.clone();
 
     let start_work_elapsed =
         chrono::Utc::now().signed_duration_since(timer_info.start_work.unwrap());
@@ -95,6 +99,16 @@ pub async fn start_timer() -> (tokio::sync::mpsc::Receiver<String>, Arc<AtomicBo
     } else {
         timer_info.rest_duration - start_rest_elapsed
     };
+
+    // Check if both work and rest durations are <= 0
+    if work.num_seconds() <= 0 && rest.num_seconds() <= 0 {
+        let (_, _receiver) = mpsc::channel(1);
+        return (_receiver, cancel); // Return immediately without spawning tasks
+    }
+
+    let cancel1 = cancel.clone();
+    let cancel2 = cancel.clone();
+    let cancel3 = cancel.clone();
 
     let (sender, receiver) = mpsc::channel(1);
     let state = timer_info.run_state;

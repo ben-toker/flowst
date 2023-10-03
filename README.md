@@ -29,6 +29,7 @@ Features
 - Configuration Handling: Save, load, and reset timer configurations to suit your preferences.
 - Scrollable Configurations: Easily navigate through different timer configurations.
 - Keyboard Controls: Intuitive keybindings for controlling the timer and navigating the UI.
+- Notifications: A bell sound plays after each interval, ensuring that you stay on task.
 
 # Installation
 For mac users:
@@ -43,6 +44,10 @@ In order to use the most recent version of the project, cloning the repo and re-
 (You could try to install it by cloning the repo and compiling it with cargo, but
 it is completely fudged on this platform. I'm working on getting it to work on Windows.)
 
+# The App
+You must use ``cargo run app`` or ``flowst app`` in order to take full advantage of Flowst's functionality. The bell notification cannot be heard unless
+the app is open. If you need to use the terminal, simply open up a new terminal tab while flowst is running in the background. Since a background daemon is out of
+the scope for this project, this is the easiest option.
 
 # Usage
 ```
