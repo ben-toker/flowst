@@ -80,6 +80,32 @@ enum Message {
     Enter,
 }
 
+pub async fn get_sound(apikey: &str, sound: &str) {
+    let search = "https://www.googleapis.com/youtube/v3/search";
+    let params = [
+        ("part", "snippet"),
+        ("q", sound),
+        ("type", "video"),
+        ("key", apikey),
+        ("maxResults", "1")
+    ];
+
+    let client = reqwest::Client::new();
+    let response: serde_json::Value = client.get(search)
+        .query(&params)
+        .send()
+        .await.unwrap()
+        .json()
+        .await.unwrap();
+
+   
+    let video_url = format!("https://www.youtube.com/watch?v={}", response["items"][0]["id"]["videoId"].as_str().unwrap());
+
+    if webbrowser::open(&video_url).is_err() {
+        eprintln!("Failed to open web browser.");
+    }
+}
+
 pub async fn run_app<B: Backend>(
     terminal: &mut Terminal<B>,
     cancel: Arc<AtomicBool>,
