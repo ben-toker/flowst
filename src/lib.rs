@@ -122,6 +122,11 @@ pub async fn run_app<B: Backend>(
         let mut selected = 0;
         loop {
             if let Event::Key(key) = event::read().unwrap() {
+                //only registers key presses (i.e. not key releases and repeats)
+                //only affects Windows
+                if key.kind != event::KeyEventKind::Press {
+                    continue;
+                }
                 match key.code {
                     KeyCode::Char('q') => {
                         tx.send(Message::Quit).unwrap();
