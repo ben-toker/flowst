@@ -78,8 +78,7 @@ flowst app
 ```
 # Issues
 ```
-    Not working on Windows correctly!
-      - The issue is (I think) the asynchronous framework for which elements are looped; the UI elements (such as the timer select) are looped every second, and something about this is breaking on the Windows end. I have tried debugging this but I don't have access to a Windows computer for development. If anyone would like to contribute and try to crack the code on this (pun not fully intended) please feel free!
+    None currently! :)
 
 ```
 
