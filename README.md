@@ -83,7 +83,9 @@ flowst app
 ```
 
 # Directives
+The main project (minimum viable product) is done, so the following are potential add-ons that would improve the experience! 
 ```
-    - Include *cassowary* crate to ensure scaling constraints
-    - Find out why this breaks on Windows and how to fix it.
+    - Include ```cassowary``` crate to ensure scaling constraints
+    - Maybe include some music feature to queue youtube videos or some built-in sound for working.
+    - Maybe a work log?
 ```
