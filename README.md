@@ -81,10 +81,10 @@ flowst app
 
 ```
 
-# Directives
+# Directives/ code entry point
 The main project (minimum viable product) is done, so the following are potential add-ons that would improve the experience! 
 ```
     - Include ```cassowary``` crate to ensure scaling constraints
-    - Maybe include some music feature to queue youtube videos or some built-in sound for working.
+    - Maybe include some music feature to queue youtube videos or some built-in sound for working. There's actually a function made for this already (```lib.rs/get_sound```), just needs to be implemented in the GUI.
     - Maybe a work log?
 ```
