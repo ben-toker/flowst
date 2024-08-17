@@ -87,19 +87,24 @@ pub async fn get_sound(apikey: &str, sound: &str) {
         ("q", sound),
         ("type", "video"),
         ("key", apikey),
-        ("maxResults", "1")
+        ("maxResults", "1"),
     ];
 
     let client = reqwest::Client::new();
-    let response: serde_json::Value = client.get(search)
+    let response: serde_json::Value = client
+        .get(search)
         .query(&params)
         .send()
-        .await.unwrap()
+        .await
+        .unwrap()
         .json()
-        .await.unwrap();
+        .await
+        .unwrap();
 
-   
-    let video_url = format!("https://www.youtube.com/watch?v={}", response["items"][0]["id"]["videoId"].as_str().unwrap());
+    let video_url = format!(
+        "https://www.youtube.com/watch?v={}",
+        response["items"][0]["id"]["videoId"].as_str().unwrap()
+    );
 
     if webbrowser::open(&video_url).is_err() {
         eprintln!("Failed to open web browser.");
