@@ -6,6 +6,8 @@ use std::sync::{
     Arc,
 };
 use tokio::sync::mpsc;
+use tokio::time::{Duration as TokioDuration, Instant};
+
 fn format_seconds(seconds: i64) -> Vec<i64> {
     return vec![(seconds / 60), (seconds % 60)];
 }
@@ -20,18 +22,22 @@ async fn countdown(
     cancel: Arc<AtomicBool>,
     sender: tokio::sync::mpsc::Sender<String>,
 ) -> Result<(), std::io::Error> {
-    for i in (0..=(seconds.num_seconds())).rev() {
+    let start = Instant::now();
+    let end = start + TokioDuration::from_secs(seconds.num_seconds() as u64);
+
+    while Instant::now() < end {
         if cancel.load(Ordering::Relaxed) {
             break;
         }
 
-        let countdown_string = print_time(i);
+        let remaining = end - Instant::now();
+        let countdown_string = print_time(remaining.as_secs() as i64);
 
-        if let Err(_) = sender.send(countdown_string).await {
+        if sender.send(countdown_string).await.is_err() {
             break;
         }
 
-        tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+        tokio::time::sleep(TokioDuration::from_secs(1)).await;
     }
 
     if !cancel.load(Ordering::Relaxed) {
