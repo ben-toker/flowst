@@ -1,5 +1,4 @@
 use crate::config::TimerInfo;
-use crate::notif;
 use chrono::Duration;
 use std::sync::{
     atomic::{AtomicBool, Ordering},
