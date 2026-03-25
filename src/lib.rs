@@ -113,12 +113,10 @@ pub async fn get_sound(apikey: &str, sound: &str) {
 
 pub async fn run_app<B: Backend>(
     terminal: &mut Terminal<B>,
-    cancel: Arc<AtomicBool>,
-    receiver: tokio::sync::mpsc::Receiver<String>,
+    mut cancel: Arc<AtomicBool>,
+    mut receiver: tokio::sync::mpsc::Receiver<String>,
 ) -> io::Result<()> {
     let (tx, rx) = std::sync::mpsc::channel();
-
-    let (mut cancel, mut receiver) = (cancel, receiver);
 
     let mut list_state = ListState::default();
     list_state.select(Some(0));
