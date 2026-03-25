@@ -22,7 +22,7 @@ pub struct TimerInfo {
     pub run_state: bool,
 }
 
-impl std::default::Default for TimerInfo {
+impl Default for TimerInfo {
     fn default() -> Self {
         Self {
             start_work: Some(Utc::now()),
