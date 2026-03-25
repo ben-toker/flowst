@@ -8,7 +8,7 @@ use tokio::sync::mpsc;
 use tokio::time::{Duration as TokioDuration, Instant};
 
 fn format_seconds(seconds: i64) -> (i64, i64) {
-    return ((seconds / 60), (seconds % 60));
+    ((seconds / 60), (seconds % 60))
 }
 
 pub fn print_time(seconds: i64) -> String {
@@ -78,7 +78,7 @@ pub async fn paused(
                 break;
             }
             let message = print_time(pause_elapsed.num_seconds());
-            if let Err(_) = sender.send(message).await {
+            if sender.send(message).await.is_err() {
                 break;
             }
             tokio::time::sleep(std::time::Duration::from_secs(1)).await;
