@@ -2,7 +2,6 @@ use clap::{Parser, Subcommand};
 use crossterm::event::{self, Event, KeyCode};
 use std::io;
 pub mod config;
-pub mod notif;
 pub mod timer;
 pub mod ui;
 

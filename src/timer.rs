@@ -43,7 +43,9 @@ async fn countdown(
     if !cancel.load(Ordering::Relaxed) {
         //This check ensures that the bell plays at the end of the
         //timer; otherwise, it would play anytime you quit the app.
-        notif::play_bell_sound();
+
+        // initiates the terminal bell with message.
+        print!("\x07Timer finished!")
     }
     Ok(())
 }
