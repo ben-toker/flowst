@@ -7,12 +7,12 @@ use std::sync::{
 use tokio::sync::mpsc;
 use tokio::time::{Duration as TokioDuration, Instant};
 
-fn format_seconds(seconds: i64) -> Vec<i64> {
-    return vec![(seconds / 60), (seconds % 60)];
+fn format_seconds(seconds: i64) -> (i64, i64) {
+    return ((seconds / 60), (seconds % 60));
 }
 
 pub fn print_time(seconds: i64) -> String {
-    let (minutes, seconds) = (format_seconds(seconds)[0], format_seconds(seconds)[1]);
+    let (minutes, seconds) = format_seconds(seconds);
     format!("{} minutes and {} seconds remaining ", minutes, seconds)
 }
 
