@@ -11,8 +11,8 @@ use std::sync::{
 };
 
 #[allow(unused_imports)]
-use tui::{
-    backend::Backend,
+use ratatui::{
+    backend::CrosstermBackend,
     layout::{Alignment, Constraint, Direction, Layout},
     style::{Color, Modifier, Style},
     text::Span,
@@ -110,8 +110,8 @@ pub async fn get_sound(apikey: &str, sound: &str) {
     }
 }
 
-pub async fn run_app<B: Backend>(
-    terminal: &mut Terminal<B>,
+pub async fn run_app(
+    terminal: &mut Terminal<CrosstermBackend<io::Stdout>>,
     mut cancel: Arc<AtomicBool>,
     mut receiver: tokio::sync::mpsc::Receiver<String>,
 ) -> io::Result<()> {

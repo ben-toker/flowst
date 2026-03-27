@@ -1,15 +1,14 @@
-use tui::layout::Rect;
+use ratatui::layout::Rect;
 #[allow(unused_imports)]
-use tui::{
-    backend::Backend,
+use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout},
     style::{Color, Modifier, Style},
-    text::{Span, Spans, Text},
+    text::{Line, Span, Text},
     widgets::{Block, BorderType, Borders, List, ListItem, ListState, Paragraph, Wrap},
-    Frame, Terminal,
+    Frame,
 };
 
-pub fn chunks<B: Backend>(f: &mut Frame<B>) -> Vec<Rect> {
+pub fn chunks(f: &mut Frame) -> Vec<Rect> {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .margin(1)
@@ -21,7 +20,7 @@ pub fn chunks<B: Backend>(f: &mut Frame<B>) -> Vec<Rect> {
             ]
             .as_ref(),
         )
-        .split(f.size());
+        .split(f.area());
 
     let lower_chunks = Layout::default()
         .direction(Direction::Horizontal)
@@ -32,7 +31,7 @@ pub fn chunks<B: Backend>(f: &mut Frame<B>) -> Vec<Rect> {
     vec![chunks[0], lower_chunks[0], lower_chunks[1], chunks[2]]
 }
 
-pub fn tim_display<B: Backend>(f: &mut Frame<B>, tim_msg: &str) {
+pub fn tim_display(f: &mut Frame, tim_msg: &str) {
     let chunks = chunks(f);
     let block = Block::default().title("Timer").borders(Borders::ALL);
     f.render_widget(block, chunks[0]);
@@ -47,12 +46,12 @@ pub fn tim_display<B: Backend>(f: &mut Frame<B>, tim_msg: &str) {
         .fg(Color::Yellow)
         .add_modifier(Modifier::ITALIC);
 
-    let text = vec![tui::text::Spans::from(Span::styled(tim_msg, style))];
+    let text = vec![Line::from(Span::styled(tim_msg, style))];
     let paragraph = Paragraph::new(text).wrap(Wrap { trim: true });
     f.render_widget(paragraph, inner_area);
 }
 
-pub fn config_display<B: Backend>(f: &mut Frame<B>, selected: &mut tui::widgets::ListState) {
+pub fn config_display(f: &mut Frame, selected: &mut ListState) {
     let chunks = chunks(f);
 
     //Config block
@@ -84,7 +83,7 @@ pub fn config_display<B: Backend>(f: &mut Frame<B>, selected: &mut tui::widgets:
     f.render_stateful_widget(conflist, inner_area, selected);
 }
 
-pub fn ui<B: Backend>(f: &mut Frame<B>) {
+pub fn ui(f: &mut Frame) {
     let chunks = chunks(f);
 
     //Welcome block
@@ -127,7 +126,7 @@ pub fn ui<B: Backend>(f: &mut Frame<B>) {
         .margin(1)
         .split(chunks[3])[0];
 
-    let text = vec![Spans::from(Span::styled(
+    let text = vec![Line::from(Span::styled(
         "q - quit | p - pause/resume",
         style,
     ))];
