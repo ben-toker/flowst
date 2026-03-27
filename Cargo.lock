@@ -809,6 +809,7 @@ dependencies = [
  "serde_with",
  "time 0.3.47",
  "tokio",
+ "toml",
  "webbrowser",
 ]
 
