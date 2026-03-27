@@ -87,6 +87,59 @@ pub async fn paused(
     Ok(())
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // 0 seconds should produce (0 minutes, 0 seconds) — the identity case.
+    #[test]
+    fn test_format_seconds_zero() {
+        assert_eq!(format_seconds(0), (0, 0));
+    }
+
+    // 60 seconds is exactly one minute with no remainder.
+    #[test]
+    fn test_format_seconds_exactly_one_minute() {
+        assert_eq!(format_seconds(60), (1, 0));
+    }
+
+    // 61 seconds should split into 1 minute and 1 second.
+    #[test]
+    fn test_format_seconds_mixed() {
+        assert_eq!(format_seconds(61), (1, 1));
+    }
+
+    // Values under 60 should produce 0 minutes and the full value as seconds.
+    #[test]
+    fn test_format_seconds_seconds_only() {
+        assert_eq!(format_seconds(45), (0, 45));
+    }
+
+    // 0 seconds remaining should format as "0 minutes and 0 seconds remaining ".
+    #[test]
+    fn test_print_time_zero() {
+        assert_eq!(print_time(0), "0 minutes and 0 seconds remaining ");
+    }
+
+    // Exactly 60 seconds should display as 1 minute, 0 seconds.
+    #[test]
+    fn test_print_time_one_minute() {
+        assert_eq!(print_time(60), "1 minutes and 0 seconds remaining ");
+    }
+
+    // 61 seconds should display as 1 minute and 1 second.
+    #[test]
+    fn test_print_time_mixed() {
+        assert_eq!(print_time(61), "1 minutes and 1 seconds remaining ");
+    }
+
+    // Large values (e.g. 1 hour) should display minutes correctly with no overflow into a higher unit.
+    #[test]
+    fn test_print_time_large() {
+        assert_eq!(print_time(3600), "60 minutes and 0 seconds remaining ");
+    }
+}
+
 pub async fn start_timer() -> (tokio::sync::mpsc::Receiver<String>, Arc<AtomicBool>) {
     let timer_info = crate::config::load_timer().unwrap();
     let cancel = Arc::new(AtomicBool::new(false));
