@@ -1,6 +1,5 @@
 use chrono::serde::ts_seconds_option as to_tsopt;
 use chrono::{DateTime, Duration, Utc};
-use confy;
 use serde::{Deserialize, Serialize};
 use serde_with::{serde_as, DurationSeconds};
 use std::fs;
